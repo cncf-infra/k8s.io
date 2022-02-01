@@ -1,0 +1,27 @@
+#+TITLE: Pulling a blob from ECRPublic using a blob hash from a manifest in GCR
+
+* Log into ECS
+#+begin_src shell
+ECR_URI="$(< ../01-ecr-registry/terraform.tfstate jq '.outputs["caleb-ecrpublic-k8s-test1"].value.repository_uri' -r)"
+aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin "${ECR_URI%/*}"
+#+end_src
+
+#+RESULTS:
+#+begin_example
+Login Succeeded
+#+end_example
+
+* Download a blob on ECR using the digests provided by GCR
+#+begin_src tmate :window download-blob
+ECR_URI="$(< ../01-ecr-registry/terraform.tfstate jq '.outputs["caleb-ecrpublic-k8s-test1"].value.repository_uri' -r)"
+MANIFEST_OF_ARCH_AMD64="$(crane manifest k8s.gcr.io/pause:3.4.1 | jq -r '.manifests | map(. | select(.platform.os=="linux") | select(.platform.architecture=="amd64")) | .[0].digest')"
+BLOB_DIGEST="$(crane manifest k8s.gcr.io/pause:3.4.1@${MANIFEST_OF_ARCH_AMD64} | jq -r .layers[0].digest)"
+OUTPUT=$(mktemp -t XXXXXXXXX.tar.gz)
+crane --verbose blob "${ECR_URI}@${BLOB_DIGEST}" > "${OUTPUT}"
+file "${OUTPUT}"
+tar -ztvf "${OUTPUT}"
+#+end_src
+
+#+RESULTS:
+#+begin_example
+#+end_example

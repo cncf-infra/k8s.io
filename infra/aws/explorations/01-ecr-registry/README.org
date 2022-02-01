@@ -1,0 +1,105 @@
+#+TITLE: ecr registry
+
+* Dependencies
+Have the latest Terraform installed
+#+begin_src shell
+terraform --version
+#+end_src
+
+#+RESULTS:
+#+begin_example
+Terraform v1.0.0
+on linux_amd64
+
+Your version of Terraform is out of date! The latest version
+is 1.1.4. You can update by downloading from https://www.terraform.io/downloads.html
+#+end_example
+
+* Terraform providers
+#+begin_src terraform :tangle ./main.tf
+terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 3.0"
+    }
+  }
+}
+provider "aws" {
+  profile = "default"
+  region  = "us-east-1"
+  alias = "us_east_1"
+}
+#+end_src
+
+* Change into the current dir
+#+begin_src tmate :window tf
+cdr
+cd 01-ecr-registry
+#+end_src
+
+* Terraform init
+#+begin_src tmate :window tf
+terraform init
+#+end_src
+
+* IMPORTANT Log into caleb+aws account
+#+begin_src tmate :window tf
+aws configure
+#+end_src
+
+* Terraform validate
+#+begin_src tmate :window tf
+terraform validate
+#+end_src
+
+* Spin up ECR
+Create an ECR
+#+begin_src terraform :tangle ./main.tf
+resource "aws_ecrpublic_repository" "caleb-ecrpublic-k8s-test1" {
+  provider = aws.us_east_1
+
+  repository_name                 = "caleb-ecrpublic-k8s-test1"
+
+  catalog_data {
+    about_text        = "Caleb ECRPublic k8s test1"
+    architectures     = ["ARM", "ARM 64", "x86", "x86-64"]
+    description       = "Prepare for registry.k8s.io"
+    operating_systems = ["Linux"]
+    usage_text        = "Just testing"
+  }
+}
+
+resource "aws_ecr_repository" "caleb-ecr-k8s-test1" {
+  name = "caleb-ecr-k8s-test1"
+  image_tag_mutability = "IMMUTABLE"
+  image_scanning_configuration {
+    scan_on_push = false
+  }
+}
+#+end_src
+
+Display the entire created ECR resource
+#+begin_src terraform :tangle ./outputs.tf
+output "caleb-ecrpublic-k8s-test1" {
+  value = aws_ecrpublic_repository.caleb-ecrpublic-k8s-test1
+}
+output "caleb-ecr-k8s-test1" {
+  value = aws_ecr_repository.caleb-ecr-k8s-test1
+}
+#+end_src
+
+* Plan the deployment
+#+begin_src tmate :window tf
+terraform plan
+#+end_src
+
+* Apply the changes
+#+begin_src tmate :window tf
+terraform apply
+#+end_src
+
+* Bring down the changes
+#+begin_src tmate :window tf
+terraform destroy
+#+end_src

@@ -1,0 +1,245 @@
+#+TITLE: Copy Kubernetes image to ECR
+
+* Log into ECS
+#+begin_src shell
+ECR_URI="$(< ../01-ecr-registry/terraform.tfstate jq '.outputs["caleb-ecrpublic-k8s-test1"].value.repository_uri' -r)"
+aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin "${ECR_URI%/*}"
+#+end_src
+
+#+RESULTS:
+#+begin_example
+Login Succeeded
+#+end_example
+
+* Copying a pause tag's content over to ECRPublic
+#+begin_src shell
+ECR_URI="$(< ../01-ecr-registry/terraform.tfstate jq '.outputs["caleb-ecrpublic-k8s-test1"].value.repository_uri' -r)"
+crane copy k8s.gcr.io/pause:3.4.1 $ECR_URI:3.4.1
+#+end_src
+
+#+RESULTS:
+#+begin_example
+#+end_example
+
+* Read the manifest from the original source
+#+begin_src shell
+crane manifest k8s.gcr.io/pause:3.4.1
+#+end_src
+
+#+RESULTS:
+#+begin_example
+{
+   "schemaVersion": 2,
+   "mediaType": "application/vnd.docker.distribution.manifest.list.v2+json",
+   "manifests": [
+      {
+         "mediaType": "application/vnd.docker.distribution.manifest.v2+json",
+         "size": 526,
+         "digest": "sha256:914e745e524aa94315a25b49a7fafc0aa395e332126930593225d7a513f5a6b2",
+         "platform": {
+            "architecture": "amd64",
+            "os": "linux"
+         }
+      },
+      {
+         "mediaType": "application/vnd.docker.distribution.manifest.v2+json",
+         "size": 526,
+         "digest": "sha256:7e75794fddb9fd40d97beda78e59d52dc36a19f4eac4907ba7c223c33411f9b3",
+         "platform": {
+            "architecture": "arm",
+            "os": "linux",
+            "variant": "v7"
+         }
+      },
+      {
+         "mediaType": "application/vnd.docker.distribution.manifest.v2+json",
+         "size": 526,
+         "digest": "sha256:e3da12d02952a9f87ffe8d193f8a5d85a218cf728bc4dc713b055c2c05d8b370",
+         "platform": {
+            "architecture": "arm64",
+            "os": "linux"
+         }
+      },
+      {
+         "mediaType": "application/vnd.docker.distribution.manifest.v2+json",
+         "size": 526,
+         "digest": "sha256:52242d907ff6ad147e1aa9ec56c829c03e7ae5c3a21d5bccdc375c051ee288bd",
+         "platform": {
+            "architecture": "ppc64le",
+            "os": "linux"
+         }
+      },
+      {
+         "mediaType": "application/vnd.docker.distribution.manifest.v2+json",
+         "size": 526,
+         "digest": "sha256:7d0ee58b885765e7c0adde811dc95f25daa76c5650046e157aca72ce5ced9973",
+         "platform": {
+            "architecture": "s390x",
+            "os": "linux"
+         }
+      },
+      {
+         "mediaType": "application/vnd.docker.distribution.manifest.v2+json",
+         "size": 1158,
+         "digest": "sha256:184010fdf8d44317f68c617f2f35a0a443a43d1eb765b1bf432f2a098c229b4c",
+         "platform": {
+            "architecture": "amd64",
+            "os": "windows",
+            "os.version": "10.0.17763.1697"
+         }
+      },
+      {
+         "mediaType": "application/vnd.docker.distribution.manifest.v2+json",
+         "size": 1158,
+         "digest": "sha256:bba23c4f756569ec5ff446bbcebd015f6e5ab97e53b853b0fdf23a0ef07560cd",
+         "platform": {
+            "architecture": "amd64",
+            "os": "windows",
+            "os.version": "10.0.18362.1256"
+         }
+      },
+      {
+         "mediaType": "application/vnd.docker.distribution.manifest.v2+json",
+         "size": 1158,
+         "digest": "sha256:3748d142b1fdceb3a1ce232c67030d9216fed186f09764630bbafd5c5feaa6f7",
+         "platform": {
+            "architecture": "amd64",
+            "os": "windows",
+            "os.version": "10.0.18363.1256"
+         }
+      },
+      {
+         "mediaType": "application/vnd.docker.distribution.manifest.v2+json",
+         "size": 1158,
+         "digest": "sha256:3d668206a76bd80c36f3b07baf255b69fb6d7643393b64605a06e9d1ac62f606",
+         "platform": {
+            "architecture": "amd64",
+            "os": "windows",
+            "os.version": "10.0.19041.746"
+         }
+      },
+      {
+         "mediaType": "application/vnd.docker.distribution.manifest.v2+json",
+         "size": 1158,
+         "digest": "sha256:bcf4eed258b46d55c344ab6415adf123570e7fe1e295812a52e8c4dacc8d8eca",
+         "platform": {
+            "architecture": "amd64",
+            "os": "windows",
+            "os.version": "10.0.19042.746"
+         }
+      }
+   ]
+}
+#+end_example
+
+#+begin_src shell
+crane manifest --verbose public.ecr.aws/i0l5q5l4/caleb-ecrpublic-k8s-test1:3.4.1
+#+end_src
+
+#+RESULTS:
+#+begin_example
+{
+   "schemaVersion": 2,
+   "mediaType": "application/vnd.docker.distribution.manifest.list.v2+json",
+   "manifests": [
+      {
+         "mediaType": "application/vnd.docker.distribution.manifest.v2+json",
+         "size": 526,
+         "digest": "sha256:914e745e524aa94315a25b49a7fafc0aa395e332126930593225d7a513f5a6b2",
+         "platform": {
+            "architecture": "amd64",
+            "os": "linux"
+         }
+      },
+      {
+         "mediaType": "application/vnd.docker.distribution.manifest.v2+json",
+         "size": 526,
+         "digest": "sha256:7e75794fddb9fd40d97beda78e59d52dc36a19f4eac4907ba7c223c33411f9b3",
+         "platform": {
+            "architecture": "arm",
+            "os": "linux",
+            "variant": "v7"
+         }
+      },
+      {
+         "mediaType": "application/vnd.docker.distribution.manifest.v2+json",
+         "size": 526,
+         "digest": "sha256:e3da12d02952a9f87ffe8d193f8a5d85a218cf728bc4dc713b055c2c05d8b370",
+         "platform": {
+            "architecture": "arm64",
+            "os": "linux"
+         }
+      },
+      {
+         "mediaType": "application/vnd.docker.distribution.manifest.v2+json",
+         "size": 526,
+         "digest": "sha256:52242d907ff6ad147e1aa9ec56c829c03e7ae5c3a21d5bccdc375c051ee288bd",
+         "platform": {
+            "architecture": "ppc64le",
+            "os": "linux"
+         }
+      },
+      {
+         "mediaType": "application/vnd.docker.distribution.manifest.v2+json",
+         "size": 526,
+         "digest": "sha256:7d0ee58b885765e7c0adde811dc95f25daa76c5650046e157aca72ce5ced9973",
+         "platform": {
+            "architecture": "s390x",
+            "os": "linux"
+         }
+      },
+      {
+         "mediaType": "application/vnd.docker.distribution.manifest.v2+json",
+         "size": 1158,
+         "digest": "sha256:184010fdf8d44317f68c617f2f35a0a443a43d1eb765b1bf432f2a098c229b4c",
+         "platform": {
+            "architecture": "amd64",
+            "os": "windows",
+            "os.version": "10.0.17763.1697"
+         }
+      },
+      {
+         "mediaType": "application/vnd.docker.distribution.manifest.v2+json",
+         "size": 1158,
+         "digest": "sha256:bba23c4f756569ec5ff446bbcebd015f6e5ab97e53b853b0fdf23a0ef07560cd",
+         "platform": {
+            "architecture": "amd64",
+            "os": "windows",
+            "os.version": "10.0.18362.1256"
+         }
+      },
+      {
+         "mediaType": "application/vnd.docker.distribution.manifest.v2+json",
+         "size": 1158,
+         "digest": "sha256:3748d142b1fdceb3a1ce232c67030d9216fed186f09764630bbafd5c5feaa6f7",
+         "platform": {
+            "architecture": "amd64",
+            "os": "windows",
+            "os.version": "10.0.18363.1256"
+         }
+      },
+      {
+         "mediaType": "application/vnd.docker.distribution.manifest.v2+json",
+         "size": 1158,
+         "digest": "sha256:3d668206a76bd80c36f3b07baf255b69fb6d7643393b64605a06e9d1ac62f606",
+         "platform": {
+            "architecture": "amd64",
+            "os": "windows",
+            "os.version": "10.0.19041.746"
+         }
+      },
+      {
+         "mediaType": "application/vnd.docker.distribution.manifest.v2+json",
+         "size": 1158,
+         "digest": "sha256:bcf4eed258b46d55c344ab6415adf123570e7fe1e295812a52e8c4dacc8d8eca",
+         "platform": {
+            "architecture": "amd64",
+            "os": "windows",
+            "os.version": "10.0.19042.746"
+         }
+      }
+   ]
+}
+#+end_example
+
+As you can see, the manifests match!

@@ -1,0 +1,123 @@
+#+TITLE: ii AWS account
+
+* Dependencies
+Have the latest Terraform installed
+#+begin_src shell
+terraform --version
+#+end_src
+
+#+RESULTS:
+#+begin_example
+Terraform v1.0.0
+on linux_amd64
+
+Your version of Terraform is out of date! The latest version
+is 1.1.4. You can update by downloading from https://www.terraform.io/downloads.html
+#+end_example
+
+* Prepare project/repo
+#+begin_src shell
+git init
+#+end_src
+
+#+RESULTS:
+#+begin_example
+Initialized empty Git repository in /home/ii/terraform-ii-aws-accounts/.git/
+#+end_example
+
+* Terraform providers
+#+begin_src terraform :tangle ./main.tf
+terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 3.0"
+    }
+  }
+}
+provider "aws" {
+  profile = "default"
+  region  = "ap-southeast-2"
+}
+#+end_src
+
+* Terraform init
+#+begin_src tmate :window tf
+terraform init
+#+end_src
+
+* Log into AWS
+#+begin_src tmate :window tf
+aws configure
+#+end_src
+
+* Terraform validate
+#+begin_src tmate :window tf
+terraform validate
+#+end_src
+
+* Declaring the organisation and roles
+Adding an organisation
+#+begin_src terraform :tangle ./main.tf
+resource "aws_organizations_organization" "Root" {
+  feature_set = "ALL"
+  lifecycle {
+    prevent_destroy = true
+  }
+}
+
+resource "aws_organizations_organizational_unit" "caleb" {
+  name = "caleb"
+  parent_id = aws_organizations_organization.Root.id
+  tags = {
+    DRI = "CALEB"
+  }
+}
+#+end_src
+
+Import the AWS root org
+#+begin_src shell
+terraform import aws_organizations_organization.Root
+#+end_src
+
+Display the entire created org resource
+#+begin_src terraform :tangle ./outputs.tf
+output "org_unit_caleb" {
+  value = aws_organizations_organizational_unit.caleb
+}
+#+end_src
+
+Adding an account
+#+begin_src terraform :tangle ./main.tf
+resource "aws_organizations_account" "caleb" {
+  name  = "caleb"
+  email = "caleb+aws@ii.coop"
+  iam_user_access_to_billing = "ALLOW"
+  parent_id = aws_organizations_organizational_unit.caleb.id
+  tags = {
+    DRI = "CALEB"
+  }
+}
+#+end_src
+
+Display the entire created org management account
+#+begin_src terraform :tangle ./outputs.tf
+output "org_unit_caleb_account" {
+  value = aws_organizations_account.caleb
+}
+#+end_src
+
+* Plan the deployment
+#+begin_src tmate :window tf
+terraform plan
+#+end_src
+
+* Apply the changes
+#+begin_src tmate :window tf
+terraform apply
+#+end_src
+
+* Bring down the changes
+#+begin_src tmate :window tf
+terraform destroy
+#+end_src
